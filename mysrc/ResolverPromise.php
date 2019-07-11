@@ -5,43 +5,25 @@ namespace My;
 use Amp\Deferred;
 use Amp\MultiReasonException;
 use Amp\Promise;
+use My\Event\EventDispatcher;
+use My\Event\PromiseSuccessEvent;
 
-class OnResolvePromiseCollection implements OnResolvePromise
+class ResolverPromise
 {
     /**
-     * @var Deferred
+     * @var EventDispatcher
      */
-    private $deferred;
-
-    /**
-     * @var PendingPromises
-     */
-    private $pendingPromises;
-
-    /**
-     * @var Promise
-     */
-    private $resolvingPromise;
-
-    /**
-     * @var ExceptionPromises
-     */
-    private $exceptionPromises;
+    private $eventDispatcher;
 
     public function __construct(
-        Deferred $deferred,
-        PendingPromises $pendingPromises,
-        Promise $resolvingPromise,
-        ExceptionPromises $exceptionPromises
+        EventDispatcher $eventDispatcher
     ) {
-        $this->deferred = $deferred;
-        $this->pendingPromises = $pendingPromises;
-        $this->resolvingPromise = $resolvingPromise;
-        $this->exceptionPromises = $exceptionPromises;
+        $this->eventDispatcher = $eventDispatcher;
     }
 
-    public function __invoke($error, $value)
+    public function __invoke()
     {
+
         if ( $this->pendingPromises->count() === 0) {
             return;
         }

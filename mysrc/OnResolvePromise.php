@@ -8,7 +8,5 @@ use Amp\Promise;
 
 interface OnResolvePromise
 {
-    public function __invoke(...$arguments): callable;
-
-    public function promises(): PromiseCollection;
+    public function __invoke($error, $value);
 }

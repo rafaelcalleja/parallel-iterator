@@ -8,5 +8,5 @@ interface ExceptionPromises extends \Countable
 {
     public function add(Promise $promise, \Throwable $error): void;
 
-    public function promises(): PromiseCollection;
+    public function promises(): Promises;
 }

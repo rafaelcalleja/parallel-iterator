@@ -6,5 +6,5 @@ use Amp\Promise;
 
 interface ResolverCollectionStrategy
 {
-    public function __invoke(PromiseCollection $collection): Promise;
+    public function __invoke(Promises $collection): Promise;
 }
