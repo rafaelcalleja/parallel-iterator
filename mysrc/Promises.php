@@ -21,7 +21,12 @@ class Promises implements \Countable, \Iterator
     private function setPromises(Promise ...$promises)
     {
         foreach($promises as $promise) {
-            $this->promises->attach($promise, State::pending());
+            $this->promises->attach(
+                $promise,
+                [
+                    'state' => State::pending(),
+                ]
+            );
         }
     }
 
@@ -55,27 +60,29 @@ class Promises implements \Countable, \Iterator
         $this->promises->rewind();
     }
 
-    public function makeFromArray(array $promises)
+    public static function makeFromArray(array $promises)
     {
-        return new self(
+        return new static(
             new \ArrayIterator($promises)
         );
     }
 
     public function success(Promise $promise)
     {
-        $this->assertPromiseExists($promise);
+        $this->assertPromisePending($promise);
+        $this->promises->detach($promise);
         $this->promises->attach(
             $promise,
             [
-                'state' => State::resolved()
+                'state' => State::resolved(),
             ]
         );
     }
 
     public function failed(Promise $promise, \Throwable $exception)
     {
-        $this->assertPromiseExists($promise);
+        $this->assertPromisePending($promise);
+        $this->promises->detach($promise);
         $this->promises->attach(
             $promise,
             [
@@ -85,6 +92,65 @@ class Promises implements \Countable, \Iterator
         );
     }
 
+    public function successfully(): Resolved
+    {
+        $success = [];
+
+        foreach($this as $promise) {
+            $info = $this->promises->getInfo();
+
+            $state = $info['state'] ?? null;
+
+            if ($state instanceof State
+                && $state->equals(State::resolved())
+            ) {
+                $success[] = $promise;
+            }
+        }
+
+        return Resolved::makeFromArray($success);
+    }
+
+    public function withFailure(): Failed
+    {
+        $failed = [];
+
+        foreach($this as $promise) {
+            $info = $this->promises->getInfo();
+
+            $state = $info['state'] ?? null;
+
+            if ($state instanceof State
+                && $state->equals(State::failed())
+            ) {
+                $failed[] = $promise;
+            }
+        }
+
+        return Failed::makeFromArray($failed);
+    }
+
+    public function pending(): self
+    {
+        $copy = clone $this;
+        $copy->promises = clone $this->promises;
+
+        $successfully = $this->successfully();
+        $withFailure = $this->withFailure();
+
+        foreach($this as $promise) {
+            if (true === $successfully->promises->contains($promise)) {
+                $copy->promises->detach($promise);
+            }
+
+            if (true === $withFailure->promises->contains($promise)) {
+                $copy->promises->detach($promise);
+            }
+        }
+
+        return $copy;
+    }
+
     /**
      * @throws \RuntimeException
      */
@@ -92,6 +158,16 @@ class Promises implements \Countable, \Iterator
     {
         if (false === $this->promises->contains($promise)) {
             throw new \RuntimeException('collection doesnt contains that promise');
+        }
+    }
+
+    /**
+     * @throws \RuntimeException
+     */
+    public function assertPromisePending(Promise $promise): void
+    {
+        if (false === $this->pending()->promises->contains($promise)) {
+            throw new \RuntimeException('Promise already resolved');
         }
     }
 }

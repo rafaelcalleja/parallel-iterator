@@ -512,6 +512,7 @@ class ParallelIterator implements Iterator, Countable
         $seconds = rand(1, 5);
         file_get_contents($url);
         sleep($seconds);
+        throw new \InvalidArgumentException('invalids');
         return (object) [$index, $url, $seconds];
     }, new \Amp\Parallel\Worker\DefaultPool()
     );

@@ -20,7 +20,8 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Amp\\ParallelFunctions\\Test\\": "test"
+            "Amp\\ParallelFunctions\\Test\\": "test",
+            "My\\Test\\": "mytest"
         }
     },
     "require": {
